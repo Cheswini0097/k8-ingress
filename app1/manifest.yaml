@@ -1,0 +1,66 @@
+appVersion: v1
+kind: Deployment
+metadata:
+  name: app1
+  labels:
+    name: app1
+    tier: web
+spec:
+  replicas: 1
+  selectors:
+    matchLabels: 
+        name: app1
+        tier: web
+  templete:
+  metadata:
+     labels:
+       name: app1
+       tier: web
+spec:
+  containers:
+  - name: app1
+    image: app1:v1
+---
+appVersion: v1
+kind: Service
+metadata:
+   name: app1
+spec:
+  selectors:
+     name: app1
+     tier: web 
+  ports:
+  - name: nginx-svc-port
+    protocol: TCP
+    port: 80
+    targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+    name: app1
+    annotations:
+      #kubernetes.io/ingress.class: alb
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:315069654700:certificate/eefec79d-8012-4e7e-a530-baf154b833f2
+      alb.ingress.kubernetes.io/listen-ports: '[ {"HTTPS": 443}]'
+      alb.ingress.kubernetes.io/tags: Environment=dev,Team=test
+      alb.ingress.kubernetes.io/group.name: expense
+spec:
+    ingressClassName: alb
+    rules:
+    - host: "app1.cheswini.shop"
+      http:
+        paths:
+        - pathType: Prefix
+          path: "/"
+          backend:
+            service:
+              name: app1
+              port:
+                number: 80      
+
+
+
+
